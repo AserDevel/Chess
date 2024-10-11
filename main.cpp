@@ -24,6 +24,7 @@ int frame;
 SDL_Rect moves_rect;
 int max_scroll, scroll_value;
 int start_time, black_time, white_time;
+
 struct Sounds {
     Mix_Music* game_start;
     Mix_Music* game_end;
@@ -114,10 +115,13 @@ void process_input() {
                 chess_board.reset();
                 Mix_PlayMusic(sounds.game_start, 1);
                 timer = false;
+                black_time = 0, white_time = 0;
                 break;
             case SDLK_t:
-                timer = true;
-                start_time = SDL_GetTicks();
+                if (timer == false) { 
+                    start_time = SDL_GetTicks();
+                    timer = true; 
+                }
             case SDLK_RIGHT:
                 if (chess_board.getCurrentMove() < chess_board.getMoves().size()) {
                     Mix_PlayMusic(sounds.move, 1);
@@ -251,6 +255,10 @@ void render_moves_display() {
 }
 
 void render_timer() {
+    int white_time_left = TIME - white_time; 
+    int black_time_left = TIME - black_time;
+    int minutes, seconds;
+
     int x, y, w, h;
     SDL_Color black = { 0, 0, 0, 255 };
     x = moves_rect.x + moves_rect.w / 3;
@@ -258,17 +266,30 @@ void render_timer() {
     w = moves_rect.w / 3;
     h = moves_rect.h / 7;
     SDL_Rect timer_rect = { x, y, w, h };
+
+    // Black timer
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     SDL_RenderFillRect(renderer, &timer_rect);
-    render_text(&to_string(black_time)[0], black,  x, y, false);
+    minutes = black_time_left / 60000;
+    black_time_left = black_time_left % 60000;
+    seconds = black_time_left / 1000;
+    string black_time_string = to_string(minutes) + ":" + to_string(seconds);
+    render_text(&black_time_string[0], black, x + timer_rect.w / 2, y, true);
+
+    // White timer
     y = moves_rect.y + moves_rect.h - timer_rect.h + moves_rect.h / 3;
     timer_rect.y = y;
     SDL_RenderFillRect(renderer, &timer_rect);
-    render_text(&to_string(white_time)[0], black,  x, y, false);
+    minutes = white_time_left / 60000;
+    white_time_left = white_time_left % 60000;
+    seconds = white_time_left / 1000;
+    string white_time_string = to_string(minutes) + ":" + to_string(seconds);
+    render_text(&white_time_string[0], black, x + timer_rect.w / 2, y, true);
+
     if (timer) {
         Color turn = chess_board.getTurn();
         if (turn == WHITE) {
-            white_time = SDL_GetTicks() - start_time - black_time; 
+            white_time = SDL_GetTicks() - start_time - black_time;
         }
         else if (turn == BLACK) {
             black_time = SDL_GetTicks() - start_time - white_time;
