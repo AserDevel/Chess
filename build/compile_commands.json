@@ -1,8 +1,0 @@
-[
-{
-  "directory": "/home/asbjorn/Skrivebord/repositories/Chess/build",
-  "command": "/usr/bin/g++ -I/home/asbjorn/Skrivebord/repositories/Chess -I/home/asbjorn/Skrivebord/repositories/Chess/src -isystem /usr/include/SDL2 -g -o CMakeFiles/chess.dir/main.cpp.o -c /home/asbjorn/Skrivebord/repositories/Chess/main.cpp",
-  "file": "/home/asbjorn/Skrivebord/repositories/Chess/main.cpp",
-  "output": "CMakeFiles/chess.dir/main.cpp.o"
-}
-]

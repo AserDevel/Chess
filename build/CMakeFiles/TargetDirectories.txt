@@ -1,3 +1,0 @@
-/home/asbjorn/Skrivebord/repositories/Chess/build/CMakeFiles/chess.dir
-/home/asbjorn/Skrivebord/repositories/Chess/build/CMakeFiles/edit_cache.dir
-/home/asbjorn/Skrivebord/repositories/Chess/build/CMakeFiles/rebuild_cache.dir
