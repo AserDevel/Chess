@@ -1,0 +1,7 @@
+#!/usr/bin/env xdg-open
+[Desktop Entry]
+Name=chess
+Type=Application
+Exec=chess
+Icon=/usr/local/share/chess/icon.png
+Terminal=false
