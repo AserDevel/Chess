@@ -18,10 +18,10 @@ SDL_Renderer* renderer = NULL;
 TTF_Font* font = NULL;
 Board chess_board(SIZE, FONT_SIZE / 2, FONT_SIZE / 2);
 bool app_is_running = true;
-bool game_over;
-bool timer;
-int last_frame_time;
-int frame;
+bool game_over = false;
+bool timer = false;
+int last_frame_time = 0;
+int frame = 0;
 SDL_Rect moves_rect;
 int max_scroll, scroll_value;
 int start_time, black_time, white_time;
@@ -59,7 +59,7 @@ bool initializeWindow() {
         return false;
     }
 
-    int h = chess_board.getSize() + 2 * chess_board.getEntity().y;
+    int h = SIZE + 2 * chess_board.getEntity().y;
     int w = h * 16 / 9;
     window = SDL_CreateWindow(
         "Chess",
@@ -257,7 +257,6 @@ void render_moves_display() {
 
     if (!moves.empty()) {
         for (int i = 0; i < moves.size(); i++) {
-            auto& m = moves.at(i);
             int x = moves_rect.x;
             int y = moves_rect.y + FONT_SIZE * (i / 4) - scroll_value;
             if (i % 4 == 1) { x += moves_rect.w / 4; }
@@ -270,14 +269,14 @@ void render_moves_display() {
                 SDL_RenderFillRect(renderer, &current_rect);
             }
 
-            Entity ent = m.piece->getEntity();
+            Entity ent = moves.at(i).piece->getEntity();
             ent.x = x;
             ent.y = y;
             ent.w = FONT_SIZE;
             ent.h = FONT_SIZE;
             ent.render(renderer);
 
-            string text ="  ->" + m.to;
+            string text ="  ->" + moves.at(i).to;
             render_text(&text[0], white, x, y, false);
 
             if (i == moves.size() - 1 && ent.y + scroll_value + ent.h > moves_rect.y + moves_rect.h) {
@@ -323,17 +322,6 @@ void render_timer() {
     seconds = white_time_left / 1000;
     string white_time_string = to_string(minutes) + ":" + to_string(seconds);
     render_text(&white_time_string[0], black, x + timer_rect.w / 2, y, true);
-}
-
-// Render the pawn swapper GUI
-void render_pawn_swapper() {
-    Entity ent = chess_board.getEntity();
-    SDL_Rect rect = { ent.x + ent.w, ent.y + 2 * (ent.h / 8), ent.w / 8, 4 * (ent.h / 8) };
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    SDL_RenderFillRect(renderer, &rect);
-    for (const auto& p : chess_board.getPieceSelection()) {
-        p->getEntity().render(renderer);
-    }
 }
 
 // Render states like "check" and "checkmate"
@@ -429,31 +417,16 @@ void render_move_animation() {
 void render() {
     SDL_SetRenderDrawColor(renderer, 70, 60, 50, 255);
     SDL_RenderClear(renderer);
-    
-    chess_board.getEntity().render(renderer);
 
     render_moves_display();
+
+    chess_board.render(renderer);
 
     render_states();
 
     render_timer();
 
-    chess_board.getLastMove()[0].render(renderer);
-    chess_board.getLastMove()[1].render(renderer);
-
-    if (chess_board.getSelectedPiece() != NULL) {
-        chess_board.getSelectedField().render(renderer);
-    }
-
-    for (const auto& p : chess_board.getPieces()) {
-        p->getEntity().render(renderer);
-    }
-
     render_move_animation();
-    
-    if (chess_board.is_pawn_swapping()) {
-        render_pawn_swapper();
-    }
     
     SDL_RenderPresent(renderer);
 }

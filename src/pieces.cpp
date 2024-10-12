@@ -75,6 +75,11 @@ class Piece {
         // Virtual destructor
         virtual ~Piece() {}
 
+        // Render this piece
+        void render(SDL_Renderer* renderer) {
+            this->entity.render(renderer);
+        }
+
         // updates the x,y coordinate. Used for the animation function
         void set_position(int x, int y) {
             this->entity.x = x;

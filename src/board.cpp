@@ -58,23 +58,21 @@ class Board {
         }
 
         // Public getters and setters
-        int getSize() { return size; }
-        Piece* getSelectedPiece() { return sel_piece; }
-        Entity getSelectedField() { return sel_field; }
+        bool board_updated;
         bool is_pawn_swapping() { return pawn_swapping; }
+        int getCurrentMove() { return current_move; }
         Entity* getLastMove() { return last_move; }
         Entity getEntity() { return entity; }
-        vector<Piece*> getPieces() { return pieces; }
-        vector<Piece*> getPieceSelection() { return swap_selection; }
         vector<Move> getMoves() { return moves; }
-        int getCurrentMove() { return current_move; }
         Color getTurn() { return turn; }
         State state;
         Piece* animation;
-        bool board_updated;
 
         // Reset the board, called to start a new game
         void reset() {
+            // cleanup memory
+            for (auto& p : pieces) { delete p; }
+            for (auto& p : captured_pieces) { delete p; }
             pieces.clear();
             captured_pieces.clear();
             swap_selection.clear();
@@ -86,7 +84,7 @@ class Board {
             last_move[0].x = -10000;
             last_move[1].x = -10000;
 
-            //white side
+            // Init white side
             for (int i = 0; i < 8; i++) {
                 char field[2] = {i+65, 50};
                 pieces.push_back(new Pawn(size, entity.x, entity.y, field, WHITE));
@@ -101,7 +99,7 @@ class Board {
             white_king = new King(size, entity.x, entity.y, "E1", WHITE);
             pieces.push_back(white_king);
 
-            //black side
+            // Init black side
             for (int i = 0; i < 8; i++) {
                 char field[2] = {i+65, 55};
                 pieces.push_back(new Pawn(size, entity.x, entity.y, field, BLACK));
@@ -192,6 +190,22 @@ class Board {
                 current_move++;
             }
         }
+
+        // General render function 
+        void render(SDL_Renderer* renderer) {
+            this->entity.render(renderer);
+            last_move[0].render(renderer);
+            last_move[1].render(renderer);
+            if (sel_piece != NULL) { sel_field.render(renderer); }
+            for (auto& p : pieces) { p->render(renderer); }
+            
+            if (pawn_swapping) { // Render pawn swapper GUI
+                SDL_Rect rect = { entity.x + entity.w, entity.y + 2 * (entity.h / 8), entity.w / 8, 4 * (entity.h / 8) };
+                SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+                SDL_RenderFillRect(renderer, &rect);
+                for (auto& p : swap_selection) { p->render(renderer); }
+            }
+        }
             
     private:
         // Attemps to move the selected piece to the new field, otherwise deselect the selected piece.
@@ -274,22 +288,25 @@ class Board {
 
         // Checks if a piece on the GUI was hit by the given field, and updates the board if true.
         void check_swap_hit(string field) {
-            for (auto& new_piece : swap_selection) {
-                if (field == new_piece->getField()) { 
+            for (auto& p : swap_selection) {
+                if (field == p->getField()) { 
                     pawn_swapping = false;
                     Piece* pawn = moves.back().piece;
-                    new_piece->update_field(pawn->getField());
-                    new_piece->update_position();
+                    p->update_field(pawn->getField());
+                    p->update_position();
                     auto it = find(pieces.begin(), pieces.end(), pawn);
                     pieces.erase(it);
-                    swapped_pieces.push_back(new_piece);
-                    pieces.insert(pieces.begin(), new_piece);
+                    swapped_pieces.push_back(p);
+                    pieces.insert(pieces.begin(), p);
 
                     for (auto& p : pieces) {
                         p->update_target_fields(pieces);
                     }
                     check_board_state();
                     board_updated = true;
+                }
+                else {
+                    delete p;
                 }
             }
         }
