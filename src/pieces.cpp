@@ -18,6 +18,7 @@ class Piece {
         string field;
         vector<string> target_fields;
 
+        // check the field based on the field position relative to current position
         void update_relative_field(int x, int y, vector<Piece*> pieces) {
             string new_field = {char(field[0] + x), char(field[1] + y)};
             if (new_field[0] < 65 || new_field[0] > 72 || new_field[1] < 49 || new_field[1] > 56) {
@@ -31,6 +32,8 @@ class Piece {
             target_fields.push_back(new_field);
         }
 
+        // Updates the field position by going in one direction until hits another piece.
+        // param x and y should always be 1 or -1.
         void update_linear_fields(int x, int y, vector<Piece*> pieces) {
         string new_field;
         bool flag = true;
@@ -57,12 +60,14 @@ class Piece {
     }
 
     public:
+        // public getters and setters
         bool isPawn() { return pawn; }
         string getField() { return field; }
         Color getColor() { return color; }
         Entity getEntity() { return entity; }
         vector<string> getTargetFields() { return target_fields; }
 
+        // Takes a container of pieces, and checks which fields this piece can target based on it's movement rules
         virtual void  update_target_fields(vector<Piece*> pieces) { 
             // Base class polymorphic function
         }
@@ -70,16 +75,19 @@ class Piece {
         // Virtual destructor
         virtual ~Piece() {}
 
+        // updates the x,y coordinate. Used for the animation function
         void set_position(int x, int y) {
             this->entity.x = x;
             this->entity.y = y;
         }
 
+        // Update position based on this piece current field
         void update_position() {
             entity.x = board_posX + entity.w * (this->field[0] - 65);
             entity.y = board_posY + board_size - entity.h * (this->field[1] - 48);
         }
 
+        // Update this field based on the given field.
         void update_field(string field_str) {
             bool validX;
             bool validY;
@@ -96,6 +104,7 @@ class Piece {
         }
 };
 
+// Class to represent the pawn piece
 class Pawn : public Piece {
     public:
         Pawn(int board_size, int board_posX, int board_posY, string field_str, Color color) {
@@ -112,6 +121,8 @@ class Pawn : public Piece {
             update_position();
         }
 
+        // This piece has the most complicated movement 
+        // It's also the only piece that has different movement based on its color
         void update_target_fields(vector<Piece*> pieces) override {
             target_fields.clear();
 
@@ -159,6 +170,7 @@ class Pawn : public Piece {
         }
 };
 
+// Class to represent the rook piece
 class Rook : public Piece {
     public:
         Rook(int board_size, int board_posX, int board_posY, string field_str, Color color) {
@@ -184,6 +196,7 @@ class Rook : public Piece {
     }
 };
 
+// Class to represent the knight piece
 class Knight : public Piece {
     public:
         Knight(int board_size, int board_posX, int board_posY, string field_str, Color color) {
@@ -213,6 +226,7 @@ class Knight : public Piece {
     }
 };
 
+// Class to represent the bishop piece
 class Bishop : public Piece {
     public:
         Bishop(int board_size, int board_posX, int board_posY, string field_str, Color color) {
@@ -238,6 +252,7 @@ class Bishop : public Piece {
     }
 };
 
+// Class to represent the queen piece
 class Queen : public Piece {
     public:
         Queen(int board_size, int board_posX, int board_posY, string field_str, Color color) {
@@ -267,6 +282,7 @@ class Queen : public Piece {
     }
 };
 
+// Class to represent the king piece
 class King : public Piece {
     public:
         King(int board_size, int board_posX, int board_posY, string field_str, Color color) {

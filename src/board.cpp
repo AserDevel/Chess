@@ -7,6 +7,7 @@
 
 using namespace std;
 
+// Struct to represent moves on the board
 typedef struct {
     Piece* piece;
     string from, to;
@@ -14,6 +15,7 @@ typedef struct {
     bool pawn_swapped;
 } Move;
 
+// Enum to represent the current state of the board
 enum State { 
     NEUTRAL, 
     WHITE_CHECK, 
@@ -25,6 +27,7 @@ enum State {
     TIE
 };
 
+// Class to represent the board, and keep all its functionality
 class Board {
     private:
         int size;
@@ -54,6 +57,7 @@ class Board {
             this->last_move[1] = Entity(-10000, -10000, this->size / 8, this->size / 8, "previous_field.png");
         }
 
+        // Public getters and setters
         int getSize() { return size; }
         Piece* getSelectedPiece() { return sel_piece; }
         Entity getSelectedField() { return sel_field; }
@@ -69,6 +73,7 @@ class Board {
         Piece* animation;
         bool board_updated;
 
+        // Reset the board, called to start a new game
         void reset() {
             pieces.clear();
             captured_pieces.clear();
@@ -80,6 +85,7 @@ class Board {
             turn = WHITE;
             last_move[0].x = -10000;
             last_move[1].x = -10000;
+
             //white side
             for (int i = 0; i < 8; i++) {
                 char field[2] = {i+65, 50};
@@ -188,7 +194,7 @@ class Board {
         }
             
     private:
-        // Attemps to move the selected piece to the new field.
+        // Attemps to move the selected piece to the new field, otherwise deselect the selected piece.
         void field_update(string new_field) {
             bool field_updated = false;
             if (sel_piece != NULL) { // Update the field of the selected piece if valid
@@ -219,6 +225,7 @@ class Board {
                         for (auto& p : pieces) {
                             p->update_target_fields(pieces);
                         }
+                        // Final calls for when a piece is moved
                         Move last_move = { sel_piece, saved_field, new_field, piece_captured, pawn_swapping };
                         update_last_move(last_move.from, last_move.to);
                         moves.push_back(last_move);
@@ -265,6 +272,7 @@ class Board {
             swap_selection.push_back(new Bishop(size, entity.x, entity.y, "I3", color));
         }
 
+        // Checks if a piece on the GUI was hit by the given field, and updates the board if true.
         void check_swap_hit(string field) {
             for (auto& new_piece : swap_selection) {
                 if (field == new_piece->getField()) { 
@@ -286,6 +294,7 @@ class Board {
             }
         }
 
+        // Checks if the given piece is check, based on the pieces on the board
         bool is_check(Piece* king) {
             bool check = false;
             for (const auto& p : pieces) {
@@ -300,7 +309,7 @@ class Board {
             return check;
         }
 
-        // Checks if the given color has a valid move
+        // Checks if the given color has a valid move on the board
         bool valid_moves(Color color) {
             for (auto& p : pieces) {
                 if (color == p->getColor()) {
@@ -314,7 +323,7 @@ class Board {
             return false;
         }
 
-        // Moves a piece, and checks if it's valid, then undo's the change
+        // Moves a piece and checks if the move was valid, then undo's the change and returns true or false
         bool validate_field(Piece* piece, string new_field) {
             bool valid = true;
             string saved_field = piece->getField();
@@ -382,7 +391,8 @@ class Board {
             state = NEUTRAL;
             return;
         }
-
+        
+        // Update the last-move-entities, which renders the fields on the board a different color
         void update_last_move(string from, string to) {
             last_move[0].x = entity.x + last_move[0].w * (from[0] - 65);
             last_move[0].y = entity.y - last_move[0].h * (from[1] - 56);

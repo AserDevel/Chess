@@ -35,6 +35,7 @@ struct Sounds {
     Mix_Music* promote;
 } sounds;
 
+// Initialize all music and sound
 bool initializeMixer() {
     if (Mix_Init(0) != 0) {
         cout << stderr << "Error initializing SLD_Mixer\n";
@@ -51,6 +52,7 @@ bool initializeMixer() {
     return true;
 }
 
+// Initialize SDL Window, renderer and TTF
 bool initializeWindow() {
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
         cout <<  stderr << "Error initializing SDL.\n";
@@ -99,6 +101,7 @@ bool initializeWindow() {
     return true;
 }
 
+// Process input events using SDL_Event
 void process_input() {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
@@ -112,14 +115,14 @@ void process_input() {
             case SDLK_ESCAPE:
                 app_is_running = false;
                 break;
-            case SDLK_r:
+            case SDLK_r: // Resets the board
                 chess_board.reset();
                 game_over = false;
                 Mix_PlayMusic(sounds.game_start, 1);
                 timer = false;
                 black_time = 0, white_time = 0;
                 break;
-            case SDLK_t:
+            case SDLK_t: // Starts the timer function
                 if (!timer && !game_over) { 
                     start_time = SDL_GetTicks();
                     timer = true; 
@@ -159,6 +162,7 @@ void process_input() {
     }
 }
 
+// Pause the frame too keep a steady FPS
 void sleep_frame() {
     int frame_target_time = 1000 / FPS;
     int time_to_wait = frame_target_time - (SDL_GetTicks() - last_frame_time);
@@ -170,9 +174,8 @@ void sleep_frame() {
     last_frame_time = SDL_GetTicks();
 }
 
-void update() {
-    sleep_frame();
-
+// Updates the timer
+void update_timer() {
     if (timer && !game_over) {
         if (chess_board.getTurn() == WHITE) {
             white_time = SDL_GetTicks() - start_time - black_time;
@@ -191,7 +194,10 @@ void update() {
         Mix_PlayMusic(sounds.game_end, 1);
         game_over = true;
     }
-    
+}
+
+// Updates the sound based on current state
+void update_sound() {
     State state = chess_board.state;
     if (chess_board.board_updated) {
         Move move = chess_board.getMoves().at(chess_board.getMoves().size() - 1);
@@ -217,6 +223,14 @@ void update() {
     }
 }
 
+// General update function
+void update() {
+    sleep_frame();
+    update_timer();
+    update_sound();
+}
+
+// Function to render text from a char* if the last param is true, then center text on the x,y coordinates.
 void render_text(char* text, SDL_Color color, int x, int y, bool centered) {
     SDL_Surface *tmp = TTF_RenderText_Blended(font, text, color);
     SDL_Texture *label = SDL_CreateTextureFromSurface(renderer, tmp);
@@ -277,6 +291,7 @@ void render_moves_display() {
     SDL_RenderFillRect(renderer, &moves_barrier_rect);
 }
 
+// Renders the timers in minutes and seconds
 void render_timer() {
     int white_time_left = TIME - white_time; 
     int black_time_left = TIME - black_time;
@@ -310,6 +325,7 @@ void render_timer() {
     render_text(&white_time_string[0], black, x + timer_rect.w / 2, y, true);
 }
 
+// Render the pawn swapper GUI
 void render_pawn_swapper() {
     Entity ent = chess_board.getEntity();
     SDL_Rect rect = { ent.x + ent.w, ent.y + 2 * (ent.h / 8), ent.w / 8, 4 * (ent.h / 8) };
@@ -320,6 +336,7 @@ void render_pawn_swapper() {
     }
 }
 
+// Render states like "check" and "checkmate"
 void render_states() {
     TTF_SetFontSize(font, FONT_SIZE / 2);
     Entity ent = chess_board.getEntity();
@@ -390,10 +407,11 @@ void render_states() {
     TTF_SetFontSize(font, FONT_SIZE);
 }
 
+// Render the movement animation for when a piece is moved
 void render_move_animation() {
     if (chess_board.animation != NULL) {
         Entity* last_move = chess_board.getLastMove();
-        if (frame <= 30) {
+        if (frame <= 30) { // Based on a 30 frame animation. Can be configured.
             int x = last_move[0].x + (last_move[1].x - last_move[0].x) * (frame / 30.0);
             int y = last_move[0].y + (last_move[1].y - last_move[0].y) * (frame / 30.0);
             chess_board.animation->set_position(x, y);
@@ -407,6 +425,7 @@ void render_move_animation() {
     }
 }
 
+// General render function
 void render() {
     SDL_SetRenderDrawColor(renderer, 70, 60, 50, 255);
     SDL_RenderClear(renderer);
@@ -439,6 +458,7 @@ void render() {
     SDL_RenderPresent(renderer);
 }
 
+// Cleanup and prepare for close down
 void cleanup() {
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);

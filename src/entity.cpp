@@ -9,6 +9,7 @@
 
 using namespace std;
 
+// General entity that can be rendered with an SDL_Renderer
 class Entity {
     public:
         int x, y, w, h;
