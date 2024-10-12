@@ -18,6 +18,7 @@ SDL_Renderer* renderer = NULL;
 TTF_Font* font = NULL;
 Board chess_board(SIZE, FONT_SIZE / 2, FONT_SIZE / 2);
 bool app_is_running = true;
+bool game_over;
 bool timer;
 int last_frame_time;
 int frame;
@@ -113,12 +114,13 @@ void process_input() {
                 break;
             case SDLK_r:
                 chess_board.reset();
+                game_over = false;
                 Mix_PlayMusic(sounds.game_start, 1);
                 timer = false;
                 black_time = 0, white_time = 0;
                 break;
             case SDLK_t:
-                if (timer == false) { 
+                if (!timer && !game_over) { 
                     start_time = SDL_GetTicks();
                     timer = true; 
                 }
@@ -138,7 +140,7 @@ void process_input() {
                 break;
             }
         case SDL_MOUSEBUTTONDOWN:
-            if (event.button.clicks = 1) { 
+            if (event.button.clicks = 1 && !game_over) { 
                 chess_board.check_mouse_hit(event.button.x, event.button.y);
             }
             break;
@@ -170,9 +172,29 @@ void sleep_frame() {
 
 void update() {
     sleep_frame();
+
+    if (timer && !game_over) {
+        if (chess_board.getTurn() == WHITE) {
+            white_time = SDL_GetTicks() - start_time - black_time;
+        }
+        else if (chess_board.getTurn() == BLACK) {
+            black_time = SDL_GetTicks() - start_time - white_time;
+        }
+    }
+    if (black_time >= TIME && !game_over) { 
+        chess_board.state = BLACK_TIMES_UP; 
+        Mix_PlayMusic(sounds.game_end, 1);
+        game_over = true;
+    }
+    else if (white_time >= TIME && !game_over) { 
+        chess_board.state = WHITE_TIMES_UP; 
+        Mix_PlayMusic(sounds.game_end, 1);
+        game_over = true;
+    }
+    
+    State state = chess_board.state;
     if (chess_board.board_updated) {
         Move move = chess_board.getMoves().at(chess_board.getMoves().size() - 1);
-        State state = chess_board.getState();
         if (state == NEUTRAL) {
             if (move.pawn_swapped == true && chess_board.is_pawn_swapping() == false) {
                 Mix_PlayMusic(sounds.promote, 1);
@@ -189,6 +211,7 @@ void update() {
         }
         else if (state == WHITE_CHECKMATE || state == BLACK_CHECKMATE || state == TIE) {
             Mix_PlayMusic(sounds.game_end, 1);
+            game_over = true;
         }
         chess_board.board_updated = false;
     }
@@ -285,17 +308,6 @@ void render_timer() {
     seconds = white_time_left / 1000;
     string white_time_string = to_string(minutes) + ":" + to_string(seconds);
     render_text(&white_time_string[0], black, x + timer_rect.w / 2, y, true);
-
-    if (timer) {
-        Color turn = chess_board.getTurn();
-        if (turn == WHITE) {
-            white_time = SDL_GetTicks() - start_time - black_time;
-        }
-        else if (turn == BLACK) {
-            black_time = SDL_GetTicks() - start_time - white_time;
-        }
-    }
-
 }
 
 void render_pawn_swapper() {
@@ -313,7 +325,7 @@ void render_states() {
     Entity ent = chess_board.getEntity();
     SDL_Rect state_rect { ent.x, 0, ent.w, FONT_SIZE / 2 };
     SDL_Color white = { 255, 255, 255, 255 };
-    switch (chess_board.getState()) {
+    switch (chess_board.state) {
         case NEUTRAL:
             break;
         case WHITE_CHECK:
@@ -331,6 +343,15 @@ void render_states() {
             SDL_RenderFillRect(renderer, &state_rect);
             render_text("Checkmate", white, state_rect.x + state_rect.w / 2, state_rect.y, true);
             break;
+        case WHITE_TIMES_UP:
+            SDL_SetRenderDrawColor(renderer, 79, 200, 100, 255);
+            SDL_RenderFillRect(renderer, &state_rect);
+            render_text("Winner!", white, state_rect.x + state_rect.w / 2, state_rect.y, true);
+            state_rect.y += ent.h + FONT_SIZE / 2;
+            SDL_SetRenderDrawColor(renderer, 200, 70, 70, 255);
+            SDL_RenderFillRect(renderer, &state_rect);
+            render_text("Times up", white, state_rect.x + state_rect.w / 2, state_rect.y, true);
+            break;
         case BLACK_CHECK:
             SDL_SetRenderDrawColor(renderer, 200, 70, 70, 255);
             SDL_RenderFillRect(renderer, &state_rect);
@@ -340,6 +361,15 @@ void render_states() {
             SDL_SetRenderDrawColor(renderer, 200, 70, 70, 255);
             SDL_RenderFillRect(renderer, &state_rect);
             render_text("Checkmate", white, state_rect.x + state_rect.w / 2, state_rect.y, true);
+            state_rect.y += ent.h + FONT_SIZE / 2;
+            SDL_SetRenderDrawColor(renderer, 79, 200, 100, 255);
+            SDL_RenderFillRect(renderer, &state_rect);
+            render_text("Winner!", white, state_rect.x + state_rect.w / 2, state_rect.y, true);
+            break;
+        case BLACK_TIMES_UP:
+            SDL_SetRenderDrawColor(renderer, 200, 70, 70, 255);
+            SDL_RenderFillRect(renderer, &state_rect);
+            render_text("Times up", white, state_rect.x + state_rect.w / 2, state_rect.y, true);
             state_rect.y += ent.h + FONT_SIZE / 2;
             SDL_SetRenderDrawColor(renderer, 79, 200, 100, 255);
             SDL_RenderFillRect(renderer, &state_rect);

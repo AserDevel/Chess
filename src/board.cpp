@@ -20,6 +20,8 @@ enum State {
     BLACK_CHECK, 
     WHITE_CHECKMATE, 
     BLACK_CHECKMATE, 
+    WHITE_TIMES_UP,
+    BLACK_TIMES_UP,
     TIE
 };
 
@@ -41,7 +43,6 @@ class Board {
         Piece* white_king;
         Piece* black_king;
         Color turn;
-        State state;
 
     public:
         Board(int size, int x, int y) {
@@ -57,7 +58,6 @@ class Board {
         Piece* getSelectedPiece() { return sel_piece; }
         Entity getSelectedField() { return sel_field; }
         bool is_pawn_swapping() { return pawn_swapping; }
-        State getState() { return state; }
         Entity* getLastMove() { return last_move; }
         Entity getEntity() { return entity; }
         vector<Piece*> getPieces() { return pieces; }
@@ -65,6 +65,7 @@ class Board {
         vector<Move> getMoves() { return moves; }
         int getCurrentMove() { return current_move; }
         Color getTurn() { return turn; }
+        State state;
         Piece* animation;
         bool board_updated;
 
